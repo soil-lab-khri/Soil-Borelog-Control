@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       name:
-        description: "Site or bridge name"
+        description: "Location Name"
         required: true
       sample_id:
         description: "Sample ID (exact existing ID to update)"
