@@ -1,0 +1,74 @@
+name: Add or update borelog
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Site or bridge name"
+        required: true
+      sample_id:
+        description: "Sample ID (exact existing ID to update)"
+        required: true
+      district:
+        description: "District"
+        required: true
+        type: choice
+        options:
+          - Thiruvananthapuram
+          - Kollam
+          - Pathanamthitta
+          - Alappuzha
+          - Kottayam
+          - Idukki
+          - Ernakulam
+          - Thrissur
+          - Palakkad
+          - Malappuram
+          - Kozhikode
+          - Wayanad
+          - Kannur
+          - Kasaragod
+      bore_date:
+        description: "Bore date (YYYY-MM-DD)"
+        required: true
+      latitude:
+        description: "Latitude (decimal degrees or DMS)"
+        required: true
+      longitude:
+        description: "Longitude (decimal degrees or DMS)"
+        required: true
+      sotr:
+        description: "SOTR document URL"
+        required: false
+      borelog:
+        description: "Borelog document URL"
+        required: true
+      soilreport:
+        description: "Soil report document URL"
+        required: false
+permissions:
+  contents: write
+jobs:
+  save:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Validate and publish
+        env:
+          ENTRY: ${{ toJSON(inputs) }}
+        run: |
+          git config user.name "KHRI borelog editor"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            python3 update.py
+            git add records.json
+            git diff --cached --quiet && exit 0
+            git commit -m "Save borelog record"
+            git push origin HEAD:main && exit 0
+            sleep "$attempt"
+          done
+          exit 1
